@@ -8,7 +8,8 @@ import moment from 'moment';                      //Импорт модуля р
 
 
 import {
-  postTaskExecute
+  postTaskExecute,
+  postTaskOut
 } from './app/webapi/server/api-routes.js'
 
 import {
@@ -31,7 +32,22 @@ appNew.options('*', cors());
 appNew.use(express.json({ limit: '10mb', extended: true }));
 appNew.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-appNew.post('/request', async function (req, res) {postTaskExecute(req, res, logger, DBG)});
+
+//console.log(await postTaskOut())
+var postData = await postTaskOut()
+//console.log(JSON.stringify(postData))
+
+//Реализовать взаимное подключение клиентов, обработку одновременного их подключения
+//appNew.post('/request', async function (req, res) {postTaskExecute(req, res, logger, DBG)});
+var code = 200
+appNew.post('/request', async function (req, res) {postTaskExecute(req, res, logger, DBG, code)});
+
+//console.log(postTaskExecute())
+
+
+
+
+
 
 appNew.use(function notFoundHandler(req, res) {
   res.status(404).send({
@@ -47,24 +63,6 @@ appNew.use(async function (err, req, res, next) {
 
 
 
-// const options = {
-//   host: '127.0.0.1',
-//   port: 9589,
-//   path: '/data/set/task/in',
-//   method: 'POST'
-// };
-// let dateStart = new Date();
-// let request = http.request(options, (res) => {
-//   if (res.statusCode != 200) {
-//     console.error(`Did not get an OK from the server. Code: ${res.statusCode}`);
-//     return;
-//   }
-//   let dateEnd = new Date();
-//   res.on('close', () => {
-//     logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено " + moment.utc(dateEnd - dateStart).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
-//   });
-// });
-// request.end();
 
 var port = 9590;
 //var port = process.env.PORT || WEBset.httpPort; // Установка порта http сервера
