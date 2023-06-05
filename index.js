@@ -32,22 +32,8 @@ appNew.options('*', cors());
 appNew.use(express.json({ limit: '10mb', extended: true }));
 appNew.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-
-//console.log(await postTaskOut())
-var postData = await postTaskOut()
-//console.log(JSON.stringify(postData))
-
-//Реализовать взаимное подключение клиентов, обработку одновременного их подключения
-//appNew.post('/request', async function (req, res) {postTaskExecute(req, res, logger, DBG)});
 var code = 200
 appNew.post('/request', async function (req, res) {postTaskExecute(req, res, logger, DBG, code)});
-
-//console.log(postTaskExecute())
-
-
-
-
-
 
 appNew.use(function notFoundHandler(req, res) {
   res.status(404).send({
@@ -60,9 +46,6 @@ appNew.use(async function (err, req, res, next) {
     error: "Internal Server Error",
   }).end();
 });
-
-
-
 
 var port = 9590;
 //var port = process.env.PORT || WEBset.httpPort; // Установка порта http сервера
@@ -80,23 +63,3 @@ httpServer.listen(port, function () {
     clc.greenBright
   );
 });
-
-//appNew.post('/request', async function (req, res) { postTaskOut(req, res, logger, DBG); });
-// var client = http.request(9589)
-// client.on
-// let url1 = new URL('http://127.0.0.1:9589/task/in');
-// fetch(url1)
-// .then(function(response){
-//     if (response.status !== 200) {  
-//         console.log('Looks like there was a problem. Status Code: ' +  
-//           response.status);  
-//         return;
-//     }
-//     response.json().then(function(data) {  
-//         console.log(data);  
-//       });  
-//     }  
-//   )  
-//   .catch(function(err) {  
-//     console.log('Fetch Error :-S', err);  
-//   });

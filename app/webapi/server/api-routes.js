@@ -4,10 +4,6 @@ import clc from 'cli-color';                      //Импорт модуля у
 import express from 'express';
 import http from 'http'                         //Импорт модуля работы с http
 
-import {
-    Task
-} from './taskForm.js'
-
 export async function postTaskExecute(request = express.request, response = express.response, logger, DBG = {}, code) {
 
     let dateStart = new Date();
@@ -107,5 +103,3 @@ export async function postTaskOut() {
         source: src
     }
 }
-//var obj = await postTaskOut();
-//console.log(obj)
