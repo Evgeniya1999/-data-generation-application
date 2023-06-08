@@ -24,6 +24,8 @@ var WEBset = await localDBInit(path.join(__dirname, './settings/web.json')); //Ð
 
 var logger = await loggerInit('YYYY-MM-DD-THH', path.join(__dirname, 'logs', 'Server-%DATE%.log'), '100m', true, '3d');
 
+var n = { value: 0 };
+
 const appNew = express();
 appNew.use(cors());
 appNew.options('*', cors());
@@ -33,7 +35,7 @@ appNew.use(express.json({ limit: '10mb', extended: true }));
 appNew.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 var code = 200
-appNew.post('/request', async function (req, res) {postTaskExecute(req, res, logger, DBG, code)});
+appNew.post('/request', async function (req, res) {postTaskExecute(req, res, logger, DBG, code, n)});
 
 appNew.use(function notFoundHandler(req, res) {
   res.status(404).send({

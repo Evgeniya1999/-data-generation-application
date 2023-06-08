@@ -4,7 +4,7 @@ import clc from 'cli-color';                      //Импорт модуля у
 import express from 'express';
 import http from 'http'                         //Импорт модуля работы с http
 
-export async function postTaskExecute(request = express.request, response = express.response, logger, DBG = {}, code) {
+export async function postTaskExecute(request = express.request, response = express.response, logger, DBG = {}, code, n) {
 
     let dateStart = new Date();
     logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ЗАПРОС] Запрос подключения " + request.socket.remoteAddress + ":" + request.socket.remotePort, '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
@@ -14,37 +14,43 @@ export async function postTaskExecute(request = express.request, response = expr
     let dateEnd = new Date();
     logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено " + moment.utc(dateEnd - dateStart).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
     if (code === 200) {
-        for (var i = 0; i < 30; i++) {
-            try {
-                const options = {
-                    host: '127.0.0.1',
-                    port: 9589,
-                    path: '/data/set/task/in',
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Content-Length': Buffer.byteLength(JSON.stringify(await postTaskOut()))
-                    }
-                };
-                let dateStart1 = new Date();
+        try {
+            const options = {
+                host: '127.0.0.1',
+                port: 9589,
+                path: '/data/set/task/in',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(JSON.stringify(await postTaskOut()))
+                }
+            };
+            let dateStart1 = new Date();
+            for (let i = 0; i <= 100; i++) {
                 let request = http.request(options, (res) => {
-                    if (res.statusCode != 200) {
+                    if (res.statusCode != 200) { //В случае ошибки
+                        console.log(i + " Запрос не выполнен");
                         console.error(`Did not get an OK from the server. Code: ${res.statusCode} ${JSON.stringify(res.headers)}`);
-                        // logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ERROR] Ошибка параметров " + res.statusCode + " " + JSON.stringify(res.headers.error-msg) + " ", "", "", 'error', DBG.cli_trace_msg, DBG.log_msg, clc.red);
-                    }
+                        let dateEnd2 = new Date();
+                        // request.on('timeout', () => { //Прочитать поподробнее про это событие
+                        //     request.destroy(); //Прочитать про destroy()
+                        // });
+                        logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено на неисполненный запрос " + moment.utc(dateEnd2 - dateStart1).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.red);
+                    } return i++;
                 });
-                request.on('error', err => {
-                    /*await*/ logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ERROR] ПОТЕРЯ СОЕДИНЕНИЯ " + err.code + " " + err.message + " ", "", "", 'error', DBG.cli_trace_msg, DBG.log_msg, clc.red);
-                });
-                request.write(JSON.stringify(await postTaskOut()));
+                request.write(JSON.stringify(await postTaskOut())); //Отправка параметров
                 let dateEnd1 = new Date();
                 request.on('response', () => { //Возникает при получении ответа на запрос
+                    console.log(i + " Запрос выполнен");
                     logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено " + moment.utc(dateEnd1 - dateStart1).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
                 });
-                request.end();
-            } catch (err) {
-                console.log(err)
-            }
+                request.on('error', err => { //Возникает при ошибке
+                    logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ERROR] ПОТЕРЯ СОЕДИНЕНИЯ " + err.code + " " + err.message + " ", "", "", 'error', DBG.cli_trace_msg, DBG.log_msg, clc.red);
+                });
+                request.end(); //Завершение запроса
+            };
+        } catch (err) {
+            console.log(err)
         }
     }
 }
@@ -83,7 +89,7 @@ export async function postTaskOut() {
     var src = (Rand(1, 8)).toString().padStart(2, "0")
     //console.log(src);
 
-    
+
     // var obj = {
     //     orderId: ord,
     //     destination: dest,
