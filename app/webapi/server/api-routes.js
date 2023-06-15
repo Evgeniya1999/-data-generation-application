@@ -15,39 +15,64 @@ export async function postTaskExecute(request = express.request, response = expr
     logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено " + moment.utc(dateEnd - dateStart).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
     if (code === 200) {
         try {
-            const options = {
+            /*const options = {
                 host: '127.0.0.1',
                 port: 9589,
                 path: '/data/set/task/in',
                 method: 'POST',
+                timeout:5000,
                 headers: {
                     'Content-Type': 'application/json',
                     'Content-Length': Buffer.byteLength(JSON.stringify(await postTaskOut()))
                 }
-            };
+            };*/
             let dateStart1 = new Date();
-            for (let i = 0; i <= 100; i++) {
-                let request = http.request(options, (res) => {
-                    if (res.statusCode != 200) { //В случае ошибки
+            let request;
+            //let z = 0;
+            for (let i = 1; i <= 100; i++) {
+                const dataToSend = await postTaskOut();
+                const options = {
+                    host: '127.0.0.1',
+                    port: 9589,
+                    path: '/data/set/task/in',
+                    method: 'POST',
+                    timeout:5000,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(JSON.stringify(dataToSend))
+                    }
+                };
+                request = http.request(options, async (res) => {
+                    if (res.statusCode != 200) {
+                        ; //В случае ошибки
+
+                        let dateEnd2 = new Date();
+                        logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено на неисполненный запрос " + moment.utc(dateEnd2 - dateStart1).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.red);
                         console.log(i + " Запрос не выполнен");
                         console.error(`Did not get an OK from the server. Code: ${res.statusCode} ${JSON.stringify(res.headers)}`);
-                        let dateEnd2 = new Date();
-                        // request.on('timeout', () => { //Прочитать поподробнее про это событие
-                        //     request.destroy(); //Прочитать про destroy()
-                        // });
-                        logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено на неисполненный запрос " + moment.utc(dateEnd2 - dateStart1).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.red);
-                    } return i++;
+                        //Неправильное решение повторного отправления, так как с другой стороны данные не были добавлены в СУБД
+                        // if (res.statusCode === 408) {
+                        //     request.write(JSON.stringify(await postTaskOut())); //Отправка параметров
+                        //     console.log((i + " Запрос отправлен повторно"))
+                        //     request.end(); //Завершение запроса
+                        //     logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено: " + moment.utc(dateEnd1 - dateStart1).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
+                        //     console.log(i + " Запрос выполнен");
+                        // }
+                    }
                 });
-                request.write(JSON.stringify(await postTaskOut())); //Отправка параметров
+                request.write(JSON.stringify(dataToSend)); //Отправка параметров
+
+                request.end(); //Завершение запроса
+
                 let dateEnd1 = new Date();
-                request.on('response', () => { //Возникает при получении ответа на запрос
+
+                request.on('response', () => { //При получении ответа на запрос
+                    logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено: " + moment.utc(dateEnd1 - dateStart1).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
                     console.log(i + " Запрос выполнен");
-                    logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ОТВЕТ] Времени затрачено " + moment.utc(dateEnd1 - dateStart1).format("HH:mm:ss.SSS"), '', '', 'info', DBG.cli_trace_msg, DBG.log_msg, clc.yellow);
                 });
-                request.on('error', err => { //Возникает при ошибке
+                request.on('error', err => { //При ошибке
                     logMessage(logger, moment(new Date()).format("DD-MM-YYYY HH:mm:ss.SSS"), "[ERROR] ПОТЕРЯ СОЕДИНЕНИЯ " + err.code + " " + err.message + " ", "", "", 'error', DBG.cli_trace_msg, DBG.log_msg, clc.red);
                 });
-                request.end(); //Завершение запроса
             };
         } catch (err) {
             console.log(err)
